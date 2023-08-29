@@ -1,25 +1,17 @@
 import asyncio
 from asyncio import sleep, shield, create_task
 from contextlib import asynccontextmanager
-from typing import Optional
 
 from nonebot import logger
-from nonebot.adapters.onebot.v11 import Event
-from nonebot_plugin_session import Session
-
-from ...config import Config
-from ...handler.pkg_context import context
-from ...service.postman import Postman
-
-conf = context.require(Config)
+from nonebot.adapters.onebot.v11 import Event, Bot
 
 
-async def send_delayed_loading_prompt(session: Session, event: Optional[Event]):
+async def send_delayed_loading_prompt(bot: Bot, event: Event):
     try:
-        await sleep(conf.pixiv_loading_prompt_delayed_time)
+        await sleep(3)
 
         logger.debug(f"send delayed loading")
-        await shield(context.require(Postman).post_plain_text("努力加载中", session, event))
+        await shield(bot.send(event, "努力加载中"))
     except asyncio.CancelledError as e:
         raise e
     except BaseException as e:
@@ -27,8 +19,8 @@ async def send_delayed_loading_prompt(session: Session, event: Optional[Event]):
 
 
 @asynccontextmanager
-async def handling_reaction(session: Session, event: Optional[Event]):
-    task = create_task(send_delayed_loading_prompt(session, event))
+async def handling_reaction(bot: Bot, event: Event):
+    task = create_task(send_delayed_loading_prompt(bot, event))
 
     try:
         yield
