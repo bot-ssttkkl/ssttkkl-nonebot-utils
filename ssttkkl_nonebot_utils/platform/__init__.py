@@ -1,8 +1,7 @@
 import importlib
 
-from nonebot import logger
-
 from .func_manager import FuncManagerFactory
+from ..nonebot import except_log_only_if_trace
 
 platform_func = FuncManagerFactory()
 
@@ -17,22 +16,27 @@ for func_name in (
         "upload_file",
         "send_msgs"
 ):
-    try:
+    @except_log_only_if_trace(ImportError, f"failed to register {func_name} for all platform")
+    def register():
         func_module = importlib.import_module("ssttkkl_nonebot_utils.platform." + func_name)
         for platform in supported_platform:
-            try:
+            @except_log_only_if_trace(ImportError, f"failed to register {func_name} for {platform}")
+            def register_for_platform():
+                nonlocal func_module
                 func_module = importlib.import_module(f"ssttkkl_nonebot_utils.platform.{func_name}.{platform}")
                 adapter_module = importlib.import_module(f"nonebot.adapters.{platform}")
                 platform_func.register(adapter_module.Adapter.get_name(), func_name, getattr(func_module, func_name))
-            except ImportError:
-                logger.trace(f"failed to register {func_name} for {platform}")
 
-        try:
+            register_for_platform()
+
+        @except_log_only_if_trace(ImportError, f"failed to register {func_name} for fallback")
+        def register_fallback():
+            nonlocal func_module
             func_module = importlib.import_module(f"ssttkkl_nonebot_utils.platform.{func_name}.fallback")
             platform_func.register("fallback", func_name, getattr(func_module, func_name))
-        except ImportError:
-            logger.trace(f"failed to register {func_name} for fallback")
-    except ImportError:
-        logger.trace(f"failed to register {func_name} for all platform")
 
+        register_fallback()
+
+
+    register()
 __all__ = ("platform_func",)

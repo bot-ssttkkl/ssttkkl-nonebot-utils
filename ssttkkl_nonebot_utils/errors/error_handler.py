@@ -4,6 +4,7 @@ from typing import Type, Tuple, Union, Optional, Callable, List, Awaitable, Any
 
 from nonebot import logger
 from nonebot.exception import MatcherException, ActionFailed
+from nonebot.internal.matcher import current_matcher
 
 from ssttkkl_nonebot_utils.errors.errors import BadRequestError, QueryError
 
@@ -33,6 +34,12 @@ class ErrorHandlers:
         Union[Callable[[str], Any],
               Callable[[str], Awaitable[Any]]]
     ] = None):
+        matcher = None
+        try:
+            matcher = current_matcher.get()
+        except LookupError:
+            pass
+
         try:
             yield
         except MatcherException as e:
@@ -41,7 +48,13 @@ class ErrorHandlers:
             # 避免当发送消息错误时再尝试发送
             logger.exception(e)
         except (BadRequestError, QueryError) as e:
-            coro = receive_error_message(e.message)
+            msg = e.message
+
+            help_info = getattr(matcher, "__help_info__", None)
+            if help_info is not None:
+                msg += f"\n\n指令用法：{help_info}"
+
+            coro = receive_error_message(msg)
             if isawaitable(coro):
                 await coro
         except BaseException as e:

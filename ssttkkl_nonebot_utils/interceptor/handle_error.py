@@ -1,11 +1,18 @@
 from functools import wraps
+from typing import Optional
 
 from nonebot_plugin_saa import MessageFactory, Text
 
 from ..errors.error_handler import ErrorHandlers
 
+DEFAULT_ERROR_HANDLERS = ErrorHandlers()
 
-def handle_error(handlers: ErrorHandlers, silently: bool = False):
+
+def handle_error(handlers: Optional[ErrorHandlers] = None,
+                 silently: bool = False):
+    if handlers is None:
+        handlers = DEFAULT_ERROR_HANDLERS
+
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
