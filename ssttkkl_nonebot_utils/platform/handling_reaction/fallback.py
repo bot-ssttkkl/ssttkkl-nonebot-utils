@@ -2,8 +2,8 @@ import asyncio
 from asyncio import sleep, shield, create_task
 from contextlib import asynccontextmanager
 
-from nonebot import logger
-from nonebot.adapters.onebot.v11 import Event, Bot
+from nonebot import logger, Bot
+from nonebot.internal.adapter import Event
 
 
 async def send_delayed_loading_prompt(bot: Bot, event: Event):
