@@ -16,11 +16,11 @@ def handle_error(handlers: Optional[ErrorHandlers] = None,
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
-            async def receive_error(msg: str):
+            async def receive_error_message(msg: str):
                 if not silently:
                     await MessageFactory(Text(msg)).send(reply=True)
 
-            async with handlers.run_excepting(receive_error):
+            async with handlers.run_excepting(receive_error_message):
                 return await func(*args, **kwargs)
 
         return wrapper
