@@ -10,14 +10,6 @@ from ssttkkl_nonebot_utils.errors.errors import BadRequestError, QueryError
 
 T_EXCEPTABLE = Union[Type[BaseException], Tuple[Type[BaseException]]]
 T_ERROR_HANDLER = Union[Callable[[BaseException], str], Callable[[BaseException], Awaitable[str]]]
-T_AFTER_ERROR_HANDLER = Callable[[BaseException, str], Any]
-
-_after_error_handler = []
-
-
-def invoke_after_error(func: T_AFTER_ERROR_HANDLER):
-    _after_error_handler.append(func)
-    return func
 
 
 class ErrorHandlers:
@@ -66,30 +58,24 @@ class ErrorHandlers:
             if isawaitable(coro):
                 await coro
         except BaseException as e:
-            try:
-                for excs, handler in self.handlers:
-                    if not isinstance(excs, tuple):
-                        excs = (excs,)
+            for excs, handler in self.handlers:
+                if not isinstance(excs, tuple):
+                    excs = (excs,)
 
-                    for exc in excs:
-                        if isinstance(e, exc):
-                            msg = handler(e)
-                            if isawaitable(msg):
-                                msg = await msg
+                for exc in excs:
+                    if isinstance(e, exc):
+                        msg = handler(e)
+                        if isawaitable(msg):
+                            msg = await msg
 
-                            if msg is not None:
-                                coro = receive_error_message(msg)
-                                if isawaitable(coro):
-                                    await coro
-                            return
+                        if msg is not None:
+                            coro = receive_error_message(msg)
+                            if isawaitable(coro):
+                                await coro
+                        return
 
-                # fallback
-                logger.exception(e)
-                coro = receive_error_message(f"内部错误：{type(e)}{str(e)}")
-                if isawaitable(coro):
-                    await coro
-            finally:
-                for h in _after_error_handler:
-                    coro = h()
-                    if isawaitable(coro):
-                        await coro
+            # fallback
+            coro = receive_error_message(f"内部错误：{type(e)}{str(e)}")
+            if isawaitable(coro):
+                await coro
+            raise e  # 重新抛出未处理的异常
