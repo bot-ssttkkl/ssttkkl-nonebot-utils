@@ -2,7 +2,6 @@ from contextlib import asynccontextmanager
 from inspect import isawaitable
 from typing import Type, Tuple, Union, Optional, Callable, List, Awaitable, Any
 
-from nonebot import logger
 from nonebot.exception import MatcherException, ActionFailed
 from nonebot.internal.matcher import current_matcher
 
@@ -46,7 +45,7 @@ class ErrorHandlers:
             raise e
         except ActionFailed as e:
             # 避免当发送消息错误时再尝试发送
-            logger.exception(e)
+            raise e
         except (BadRequestError, QueryError) as e:
             msg = e.message
 
@@ -75,7 +74,9 @@ class ErrorHandlers:
                         return
 
             # fallback
-            coro = receive_error_message(f"内部错误：{type(e)}{str(e)}")
-            if isawaitable(coro):
-                await coro
-            raise e  # 重新抛出未处理的异常
+            try:
+                coro = receive_error_message(f"内部错误：{type(e)}{str(e)}")
+                if isawaitable(coro):
+                    await coro
+            finally:
+                raise e  # 重新抛出未处理的异常
