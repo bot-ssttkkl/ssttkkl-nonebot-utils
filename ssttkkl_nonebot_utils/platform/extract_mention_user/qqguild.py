@@ -3,7 +3,7 @@ from typing import Optional
 from nonebot.adapters.qqguild import MessageSegment
 
 
-async def extract_mention_user(seg: MessageSegment) -> Optional[str]:
+def extract_mention_user(seg: MessageSegment) -> Optional[str]:
     if seg.type == 'mention_user':
         return seg.data['user_id']
     else:
