@@ -15,7 +15,9 @@ def add_reaction(bot: Bot, event: MessageEvent, type: int, id: str, delay: float
         except BaseException as e:
             logger.exception(e)
 
-    create_task(_())
+    if event.src_guild_id == event.guild_id:
+        # 消息来自频道
+        create_task(_())
 
 
 def remove_reaction(bot: Bot, event: MessageEvent, type: int, id: str, delay: float = 0):
@@ -27,7 +29,9 @@ def remove_reaction(bot: Bot, event: MessageEvent, type: int, id: str, delay: fl
         except BaseException as e:
             logger.exception(e)
 
-    create_task(_())
+    if event.src_guild_id == event.guild_id:
+        # 消息来自频道
+        create_task(_())
 
 
 @asynccontextmanager
