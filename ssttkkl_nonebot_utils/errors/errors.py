@@ -1,5 +1,5 @@
 class BadRequestError(Exception):
-    def __init__(self, message=None):
+    def __init__(self, message: str = ""):
         super().__init__()
         self.message = message
 
@@ -8,7 +8,7 @@ class BadRequestError(Exception):
 
 
 class QueryError(Exception):
-    def __init__(self, message=None):
+    def __init__(self, message: str = ""):
         super().__init__()
         self.message = message
 

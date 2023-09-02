@@ -31,14 +31,8 @@ class ErrorHandlers:
     @asynccontextmanager
     async def run_excepting(self, receive_error_message: Optional[
         Union[Callable[[str], Any],
-              Callable[[str], Awaitable[Any]]]
+        Callable[[str], Awaitable[Any]]]
     ] = None):
-        matcher = None
-        try:
-            matcher = current_matcher.get()
-        except LookupError:
-            pass
-
         try:
             yield
         except MatcherException as e:
@@ -46,16 +40,6 @@ class ErrorHandlers:
         except ActionFailed as e:
             # 避免当发送消息错误时再尝试发送
             raise e
-        except (BadRequestError, QueryError) as e:
-            msg = e.message
-
-            help_info = getattr(matcher, "__help_info__", None)
-            if help_info is not None:
-                msg += f"\n\n指令用法：{help_info}"
-
-            coro = receive_error_message(msg)
-            if isawaitable(coro):
-                await coro
         except BaseException as e:
             for excs, handler in self.handlers:
                 if not isinstance(excs, tuple):
@@ -72,6 +56,23 @@ class ErrorHandlers:
                             if isawaitable(coro):
                                 await coro
                         return
+
+            if isinstance(e, (BadRequestError, QueryError)):
+                msg = e.message
+
+                matcher = None
+                try:
+                    matcher = current_matcher.get()
+                except LookupError:
+                    pass
+
+                help_info = getattr(matcher, "__help_info__", None)
+                if help_info is not None:
+                    msg += f"\n\n指令用法：{help_info}"
+
+                coro = receive_error_message(msg)
+                if isawaitable(coro):
+                    await coro
 
             # fallback
             try:
