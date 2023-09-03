@@ -73,6 +73,7 @@ class ErrorHandlers:
                 coro = receive_error_message(msg)
                 if isawaitable(coro):
                     await coro
+                return
 
             # fallback
             try:
