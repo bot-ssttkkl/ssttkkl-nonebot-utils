@@ -40,13 +40,13 @@ async def handling_reaction(bot: Bot, event: Event):
     if not isinstance(event, MessageEvent):
         return
 
-    add_reaction(bot, event, ":flushed_face:")  # 处理中：😳
+    add_reaction(bot, event, "flushed_face")  # 处理中：😳
     try:
         yield
-        add_reaction(bot, event, ":face_blowing_a_kiss:", delay=1)  # 处理完毕：😘
+        add_reaction(bot, event, "face_blowing_a_kiss", delay=1)  # 处理完毕：😘
     except BaseException as e:
         if not isinstance(e, MatcherException):
-            add_reaction(bot, event, ":loudly_crying_face:", delay=1)  # 处理出错：😭
+            add_reaction(bot, event, "loudly_crying_face", delay=1)  # 处理出错：😭
         raise e
     finally:
-        remove_reaction(bot, event, ":flushed_face:", delay=2)  # 处理中：😳
+        remove_reaction(bot, event, "flushed_face", delay=2)  # 处理中：😳

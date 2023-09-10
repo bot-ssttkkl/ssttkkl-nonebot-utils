@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ssttkkl-nonebot-utils"
-version = "0.1.14"
+version = "0.1.15"
 description = ""
 authors = ["ssttkkl <huang.wen.long@hotmail.com>"]
 license = "MIT"

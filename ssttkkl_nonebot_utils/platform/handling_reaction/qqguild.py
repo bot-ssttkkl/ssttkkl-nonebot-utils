@@ -15,7 +15,7 @@ def add_reaction(bot: Bot, event: MessageEvent, type: int, id: str, delay: float
         except BaseException as e:
             logger.exception(e)
 
-    if event.src_guild_id == event.guild_id:
+    if event.src_guild_id is None:
         # 消息来自频道
         create_task(_())
 
@@ -29,7 +29,7 @@ def remove_reaction(bot: Bot, event: MessageEvent, type: int, id: str, delay: fl
         except BaseException as e:
             logger.exception(e)
 
-    if event.src_guild_id == event.guild_id:
+    if event.src_guild_id is None:
         # 消息来自频道
         create_task(_())
 
