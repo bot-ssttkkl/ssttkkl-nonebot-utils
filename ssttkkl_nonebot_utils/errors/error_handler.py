@@ -7,8 +7,8 @@ from nonebot.internal.matcher import current_matcher
 
 from ssttkkl_nonebot_utils.errors.errors import BadRequestError, QueryError
 
-T_EXCEPTABLE = Union[Type[BaseException], Tuple[Type[BaseException]]]
-T_ERROR_HANDLER = Union[Callable[[BaseException], str], Callable[[BaseException], Awaitable[str]]]
+T_EXCEPTABLE = Union[Type[BaseException], Tuple[Type[BaseException], ...]]
+T_ERROR_HANDLER = Union[Callable[[BaseException], Optional[str]], Callable[[BaseException], Awaitable[Optional[str]]]]
 
 
 class ErrorHandlers:
@@ -29,10 +29,15 @@ class ErrorHandlers:
             return decorator
 
     @asynccontextmanager
-    async def run_excepting(self, receive_error_message: Optional[
-        Union[Callable[[str], Any],
-        Callable[[str], Awaitable[Any]]]
-    ] = None):
+    async def run_excepting(
+            self,
+            receive_error_message: Optional[
+                Union[Callable[[str], Any],
+                Callable[[str], Awaitable[Any]]]
+            ] = None,
+            *,
+            reraise_unhandled: bool = False
+    ):
         try:
             yield
         except MatcherException as e:
@@ -51,7 +56,7 @@ class ErrorHandlers:
                         if isawaitable(msg):
                             msg = await msg
 
-                        if msg is not None:
+                        if msg:
                             coro = receive_error_message(msg)
                             if isawaitable(coro):
                                 await coro
@@ -70,9 +75,10 @@ class ErrorHandlers:
                 if help_info is not None:
                     msg += f"\n\n指令用法：{help_info}"
 
-                coro = receive_error_message(msg)
-                if isawaitable(coro):
-                    await coro
+                if msg:
+                    coro = receive_error_message(msg)
+                    if isawaitable(coro):
+                        await coro
                 return
 
             # fallback
@@ -81,4 +87,5 @@ class ErrorHandlers:
                 if isawaitable(coro):
                     await coro
             finally:
-                raise e  # 重新抛出未处理的异常
+                if reraise_unhandled:
+                    raise e  # 重新抛出未处理的异常
