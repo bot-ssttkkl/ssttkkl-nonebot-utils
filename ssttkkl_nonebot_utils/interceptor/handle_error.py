@@ -1,8 +1,7 @@
 from functools import wraps
-from typing import Optional
-
 from nonebot.internal.matcher import current_matcher
 from nonebot_plugin_saa import MessageFactory, Text
+from typing import Optional
 
 from ..errors.error_handler import ErrorHandlers
 
@@ -24,7 +23,7 @@ def handle_error(handlers: Optional[ErrorHandlers] = None,
                     await MessageFactory(Text(msg)).send(reply=True)
                 await matcher.finish()
 
-            async with handlers.run_excepting(receive_error_message):
+            async with handlers.run_excepting(receive_error_message, reraise_unhandled=True):
                 return await func(*args, **kwargs)
 
         return wrapper

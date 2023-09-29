@@ -8,10 +8,10 @@ from nonebot.internal.adapter import Event
 
 async def send_delayed_loading_prompt(bot: Bot, event: Event):
     try:
-        await sleep(3)
+        await sleep(5)
 
         logger.debug(f"send delayed loading")
-        await shield(bot.send(event, "努力加载中"))
+        await bot.send(event, "努力加载中")
     except asyncio.CancelledError as e:
         raise e
     except BaseException as e:
