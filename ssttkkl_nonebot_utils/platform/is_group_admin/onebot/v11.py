@@ -1,5 +1,5 @@
 from nonebot import get_bot
-from nonebot.adapters.qqguild import Bot
+from nonebot.adapters.onebot.v11 import Bot
 from nonebot_plugin_session import Session, SessionLevel
 
 
