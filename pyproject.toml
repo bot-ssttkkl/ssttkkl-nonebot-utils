@@ -12,8 +12,10 @@ python = "^3.8"
 nonebot2 = "^2.0.0"
 nonebot-plugin-send-anything-anywhere = ">=0.3.0"
 nonebot-plugin-session = ">=0.1.0"
+nonebot-plugin-localstore = ">=0.3.0"
 asyncache = ">=0.3.1"
 cachetools = ">=5.3.1"
+aiofiles = ">=23.2.1"
 
 [tool.poetry.group.dev.dependencies]
 nonebot2 = { extras = ["httpx", "websocket", "fastapi"], version = "^2.0.0" }
