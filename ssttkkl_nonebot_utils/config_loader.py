@@ -1,8 +1,17 @@
 from typing import Type, TypeVar, Optional, Callable, Union
 
 from nonebot import get_driver
-from pydantic import BaseSettings, ValidationError, MissingError
+from pydantic import ValidationError, MissingError
 
+try:
+    from pydantic_settings import BaseSettings
+except ImportError:
+    try:
+        from pydantic import BaseSettings
+    except ImportError as e:
+        raise ImportError(
+            "如果你正在使用pydantic v2，请手动安装pydantic-settings"
+        ) from e
 
 class ConfigError(RuntimeError):
     def __init__(self, msg: Optional[str]):
@@ -35,3 +44,5 @@ def load_conf(t_conf: Type[T], error_msg: Union[str, Callable[[ValidationError],
                 error_msg = error_msg(e)
             raise ConfigError(error_msg) from e
     return _conf[t_conf]
+
+__all__ = ("BaseSettings", "ConfigError", "load_conf")
