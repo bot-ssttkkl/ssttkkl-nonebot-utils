@@ -1,7 +1,9 @@
 from typing import Type, TypeVar, Optional, Callable, Union
 
 from nonebot import get_driver
-from pydantic import ValidationError, MissingError
+from pydantic import VERSION
+
+PYDANTIC_V2 = int(VERSION.split(".", 1)[0]) == 2
 
 try:
     from pydantic_settings import BaseSettings
@@ -24,11 +26,23 @@ class ConfigError(RuntimeError):
 _conf = {}
 
 
-def default_error_msg(e: ValidationError) -> str:
-    for raw in e.raw_errors:
-        if isinstance(raw.exc, MissingError):
-            return f"请设置{raw.loc_tuple()[0].upper()}，否则本插件无法正常工作"
-    return str(e)
+if PYDANTIC_V2:
+    from pydantic import ValidationError
+
+    def default_error_msg(e: ValidationError) -> str:
+        for raw in e.errors():
+            if raw["type"] == "missing":
+                required_loc = '/'.join(raw["loc"])
+                return f"请设置{required_loc}，否则本插件无法正常工作"
+        return str(e)
+else:
+    from pydantic import ValidationError, MissingError
+
+    def default_error_msg(e: ValidationError) -> str:
+        for raw in e.raw_errors:
+            if isinstance(raw.exc, MissingError):
+                return f"请设置{raw.loc_tuple()[0].upper()}，否则本插件无法正常工作"
+        return str(e)
 
 
 T = TypeVar("T", bound=BaseSettings)
