@@ -1,19 +1,9 @@
 from typing import Type, TypeVar, Optional, Callable, Union
 
-from nonebot import get_driver
-from pydantic import VERSION
+from nonebot import get_plugin_config
+from pydantic import VERSION, BaseModel
 
 PYDANTIC_V2 = int(VERSION.split(".", 1)[0]) == 2
-
-try:
-    from pydantic_settings import BaseSettings
-except ImportError:
-    try:
-        from pydantic import BaseSettings
-    except ImportError as e:
-        raise ImportError(
-            "如果你正在使用pydantic v2，请手动安装pydantic-settings"
-        ) from e
 
 class ConfigError(RuntimeError):
     def __init__(self, msg: Optional[str]):
@@ -27,6 +17,8 @@ _conf = {}
 
 
 if PYDANTIC_V2:
+    BaseSettings = BaseModel
+
     from pydantic import ValidationError
 
     def default_error_msg(e: ValidationError) -> str:
@@ -36,12 +28,15 @@ if PYDANTIC_V2:
                 return f"请设置{required_loc}，否则本插件无法正常工作"
         return str(e)
 else:
-    from pydantic import ValidationError, MissingError
+    from pydantic import ValidationError, MissingError, BaseSettings
+    from pydantic.error_wrappers import ErrorWrapper
 
-    def default_error_msg(e: ValidationError) -> str:
+    def default_error_msg(e: ValidationError | ErrorWrapper) -> str:
         for raw in e.raw_errors:
             if isinstance(raw.exc, MissingError):
                 return f"请设置{raw.loc_tuple()[0].upper()}，否则本插件无法正常工作"
+            elif isinstance(raw.exc, ValidationError):
+                return default_error_msg(raw.exc)
         return str(e)
 
 
@@ -52,11 +47,11 @@ def load_conf(t_conf: Type[T], error_msg: Union[str, Callable[[ValidationError],
     global _conf
     if t_conf not in _conf:
         try:
-            _conf[t_conf] = t_conf(**get_driver().config.dict())
+            _conf[t_conf] = get_plugin_config(t_conf)
         except ValidationError as e:
             if callable(error_msg):
                 error_msg = error_msg(e)
             raise ConfigError(error_msg) from e
     return _conf[t_conf]
 
-__all__ = ("BaseSettings", "ConfigError", "load_conf")
+__all__ = ("ConfigError", "load_conf")
